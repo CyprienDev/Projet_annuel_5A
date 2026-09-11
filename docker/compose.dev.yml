@@ -1,4 +1,4 @@
-services:
+hadolint examples/smoke-api/Dockerfileservices:
   postgres:
     image: postgres:18-alpine
 
