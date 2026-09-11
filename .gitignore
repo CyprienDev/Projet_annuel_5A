@@ -1,0 +1,46 @@
+# Variables d'environnement
+.env
+.env.*
+!.env.example
+
+# Secrets et identifiants
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+secrets.*
+
+# OpenTofu / Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Système d'exploitation
+.DS_Store
+Thumbs.db
+
+# Journaux
+*.log
+logs/
+
+# Fichiers temporaires
+tmp/
+temp/
+.cache/
+
+# Fichiers générés / compilation
+dist/
+build/
