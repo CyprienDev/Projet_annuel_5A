@@ -1,4 +1,4 @@
-FROM node:24-alpine
+FROM node:26-alpine
 
 # Mise à jour des paquets système et suppression des outils
 # inutiles dans l'image d'exécution.
