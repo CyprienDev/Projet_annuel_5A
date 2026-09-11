@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help doctor setup up down logs test \
+.PHONY: help doctor setup up down logs status test \
         tofu-fmt tofu-validate tflint hadolint security check
 
 help:
@@ -75,3 +75,6 @@ security:
 check: tofu-fmt tofu-validate tflint hadolint security
 	@echo ""
 	@echo "✅ Tous les contrôles sont passés."
+
+status:
+	docker compose --env-file .env -f docker/compose.dev.yml ps
