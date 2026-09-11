@@ -23,5 +23,24 @@ services:
       timeout: 5s
       retries: 5
 
+  api:
+    build:
+      context: ../examples/smoke-api
+      dockerfile: Dockerfile
+
+    container_name: annual-project-api
+
+    restart: unless-stopped
+
+    environment:
+      PORT: 8080
+
+    ports:
+      - "8080:8080"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   postgres_data:
