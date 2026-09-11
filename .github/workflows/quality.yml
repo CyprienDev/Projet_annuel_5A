@@ -1,0 +1,100 @@
+name: Qualité et sécurité
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  infrastructure:
+    name: Qualité Infrastructure
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupération du dépôt
+        uses: actions/checkout@v7
+
+      - name: Installation de TFLint
+        uses: terraform-linters/setup-tflint@v6
+        with:
+          cache: true
+
+      - name: Initialisation de TFLint
+        working-directory: infrastructure/environments/dev
+        run: tflint --init --config=../../.tflint.hcl
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Analyse TFLint
+        working-directory: infrastructure/environments/dev
+        run: tflint --config=../../.tflint.hcl --format=compact
+
+
+  dockerfile:
+    name: Qualité Dockerfile
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupération du dépôt
+        uses: actions/checkout@v7
+
+      - name: Analyse Hadolint
+        run: |
+          docker run --rm -i \
+            ghcr.io/hadolint/hadolint:v2.15.1 \
+            < examples/smoke-api/Dockerfile
+
+
+  security:
+    name: Analyse de sécurité
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupération du dépôt
+        uses: actions/checkout@v7
+
+      - name: Analyse du dépôt avec Trivy
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,secret,misconfig
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+
+
+  container-security:
+    name: Sécurité image Docker
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupération du dépôt
+        uses: actions/checkout@v7
+
+      - name: Construction de l'image
+        run: |
+          docker build \
+            -t annual-project-smoke-api:${{ github.sha }} \
+            examples/smoke-api
+
+      - name: Analyse de l'image avec Trivy
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: image
+          image-ref: annual-project-smoke-api:${{ github.sha }}
+          scanners: vuln
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
