@@ -1,0 +1,109 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  opentofu:
+    name: Vérification OpenTofu
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupération du dépôt
+        uses: actions/checkout@v7
+
+      - name: Installation d'OpenTofu
+        uses: opentofu/setup-opentofu@v2
+        with:
+          tofu_version_file: .opentofu-version
+          tofu_wrapper: false
+
+      - name: Vérification du format
+        run: tofu fmt -check -recursive infrastructure/
+
+      - name: Initialisation
+        working-directory: infrastructure/environments/dev
+        run: tofu init -backend=false
+
+      - name: Validation
+        working-directory: infrastructure/environments/dev
+        run: tofu validate
+
+
+  docker:
+    name: Vérification Docker
+    runs-on: ubuntu-latest
+
+    env:
+      POSTGRES_DB: annual_project
+      POSTGRES_USER: annual_project
+      POSTGRES_PASSWORD: ci_only_password
+      POSTGRES_PORT: 5432
+
+    steps:
+      - name: Récupération du dépôt
+        uses: actions/checkout@v7
+
+      - name: Construction de l'image de test
+        run: |
+          docker build \
+            -t annual-project-smoke-api \
+            examples/smoke-api
+
+      - name: Validation de Docker Compose
+        run: |
+          docker compose \
+            -f docker/compose.dev.yml \
+            config
+
+      - name: Démarrage de l'environnement
+        run: |
+          docker compose \
+            -f docker/compose.dev.yml \
+            up -d --build
+
+      - name: Test du endpoint de santé
+        run: |
+          for i in {1..30}; do
+            if curl --fail --silent http://localhost:8080/health; then
+              echo
+              echo "API opérationnelle."
+              exit 0
+            fi
+
+            echo "En attente de l'API..."
+            sleep 2
+          done
+
+          echo "L'API n'a pas démarré correctement."
+          docker compose -f docker/compose.dev.yml logs
+          exit 1
+
+      - name: Vérification de PostgreSQL
+        run: |
+          docker compose \
+            -f docker/compose.dev.yml \
+            exec -T postgres \
+            pg_isready \
+            -U "$POSTGRES_USER" \
+            -d "$POSTGRES_DB"
+
+      - name: Arrêt de l'environnement
+        if: always()
+        run: |
+          docker compose \
+            -f docker/compose.dev.yml \
+            down -v
