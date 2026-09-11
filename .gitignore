@@ -42,4 +42,4 @@ temp/
 
 # Fichiers générés / compilation
 dist/
-build/
+build/gha-creds-*.json

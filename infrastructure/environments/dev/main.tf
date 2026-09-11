@@ -4,7 +4,19 @@ module "project_services" {
   project_id = var.project_id
 
   services = [
-    "run.googleapis.com",
-    "artifactregistry.googleapis.com"
+    "iam.googleapis.com",
+    "iamcredentials.googleapis.com",
+    "sts.googleapis.com"
+  ]
+}
+
+module "github_wif" {
+  source = "../../modules/github-wif"
+
+  project_id        = var.project_id
+  github_repository = var.github_repository
+
+  depends_on = [
+    module.project_services
   ]
 }

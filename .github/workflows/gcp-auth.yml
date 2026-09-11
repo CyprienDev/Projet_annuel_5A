@@ -1,0 +1,37 @@
+name: Vérification authentification GCP
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  authentication:
+    name: Authentification Google Cloud
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupération du dépôt
+        uses: actions/checkout@v7
+
+      - name: Authentification auprès de Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - name: Installation de Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Vérification du projet
+        run: |
+          echo "Projet GCP :"
+          gcloud config get-value project
+
+          echo "Compte actif :"
+          gcloud auth list \
+            --filter=status:ACTIVE \
+            --format="value(account)"

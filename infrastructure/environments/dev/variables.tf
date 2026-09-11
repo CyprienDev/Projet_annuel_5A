@@ -9,3 +9,8 @@ variable "region" {
   default     = "europe-west1"
 }
 
+
+variable "github_repository" {
+  description = "Dépôt GitHub autorisé au format owner/repository."
+  type        = string
+}
