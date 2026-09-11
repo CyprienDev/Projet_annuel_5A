@@ -1,9 +1,7 @@
-hadolint examples/smoke-api/Dockerfileservices:
+services:
   postgres:
     image: postgres:18-alpine
-
     container_name: annual-project-postgres
-
     restart: unless-stopped
 
     environment:
@@ -29,7 +27,6 @@ hadolint examples/smoke-api/Dockerfileservices:
       dockerfile: Dockerfile
 
     container_name: annual-project-api
-
     restart: unless-stopped
 
     environment:
