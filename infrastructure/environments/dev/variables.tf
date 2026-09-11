@@ -9,8 +9,3 @@ variable "region" {
   default     = "europe-west1"
 }
 
-variable "environment" {
-  description = "Environnement de déploiement."
-  type        = string
-  default     = "dev"
-}
